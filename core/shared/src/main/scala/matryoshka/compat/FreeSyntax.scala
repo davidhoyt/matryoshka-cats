@@ -19,12 +19,12 @@ package compat
 
 import slamdata.Predef._
 
+import cats._
 import cats.free._
 
 trait FreeSyntax {
-  import FreeSyntax._
-
-  @inline implicit final def toCompatFreeObjectOps(given: Free.type): FreeObjectOps = freeObjectOpsInstance
+  @inline implicit final def compatMonoidInstanceForTrampoline[B](implicit B: Monoid[B]): Monoid[Trampoline[B]] = FreeSyntax.compatMonoidInstanceForTrampoline
+  @inline implicit final def toCompatFreeObjectOps(given: Free.type): FreeSyntax.FreeObjectOps = FreeSyntax.freeObjectOpsInstance
 }
 
 object FreeSyntax {
@@ -33,4 +33,12 @@ object FreeSyntax {
   final class FreeObjectOps(private val obj: Free.type) extends AnyVal {
     @inline def point[S[_], A](value: A): Free[S, A] = Free.pure[S, A](value)
   }
+
+  implicit def compatMonoidInstanceForTrampoline[B](implicit B: Monoid[B]): Monoid[Trampoline[B]] =
+    new Monoid[Trampoline[B]] {
+      override val empty: Trampoline[B] = Trampoline.done(B.empty)
+
+      override def combine(x: Trampoline[B], y: Trampoline[B]): Trampoline[B] =
+        x.flatMap(x1 => y.map(y1 => B.combine(x1, y1)))
+    }
 }

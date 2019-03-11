@@ -15,29 +15,20 @@
  */
 
 package matryoshka
-
-import compat._
-import implicits._
+package compat
 
 import slamdata.Predef._
 
-import cats._
-import simulacrum._
+import cats.data._
 
-@typeclass trait EqualT[T[_[_]]] {
-  def equal[F[_]: Functor](tf1: T[F], tf2: T[F])(implicit del: Delay[Equal, F]):
-      Boolean
+trait NonEmptyListSyntax {
+  import NonEmptyListSyntax._
 
-  def equalT[F[_]: Functor](delay: Delay[Equal, F]): Equal[T[F]] =
-    Equal.equal[T[F]](equal[F](_, _)(Functor[F], delay))
+  @inline implicit final def toCompatNonEmptyListObjectOps(given: NonEmptyList.type): NonEmptyListObjectOps.type = NonEmptyListObjectOps
 }
 
-@SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
-object EqualT {
-  def recursiveT[T[_[_]]: RecursiveT]: EqualT[T] = new EqualT[T] {
-    def equal[F[_]: Functor]
-      (tf1: T[F], tf2: T[F])
-      (implicit del: Delay[Equal, F]): Boolean =
-      del(equalT[F](del)).equal(tf1.project, tf2.project)
+object NonEmptyListSyntax {
+  object NonEmptyListObjectOps {
+    @inline def nel[A](h: A, t: List[A]): NonEmptyList[A] = NonEmptyList(h, t)
   }
 }

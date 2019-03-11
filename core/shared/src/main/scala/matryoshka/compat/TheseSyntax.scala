@@ -15,29 +15,28 @@
  */
 
 package matryoshka
-
-import compat._
-import implicits._
+package compat
 
 import slamdata.Predef._
 
-import cats._
-import simulacrum._
+import cats.data._
 
-@typeclass trait EqualT[T[_[_]]] {
-  def equal[F[_]: Functor](tf1: T[F], tf2: T[F])(implicit del: Delay[Equal, F]):
-      Boolean
-
-  def equalT[F[_]: Functor](delay: Delay[Equal, F]): Equal[T[F]] =
-    Equal.equal[T[F]](equal[F](_, _)(Functor[F], delay))
+trait TheseSyntax {
+  type \&/[+A, +B] = TheseSyntax.\&/[A, B]
 }
 
-@SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
-object EqualT {
-  def recursiveT[T[_[_]]: RecursiveT]: EqualT[T] = new EqualT[T] {
-    def equal[F[_]: Functor]
-      (tf1: T[F], tf2: T[F])
-      (implicit del: Delay[Equal, F]): Boolean =
-      del(equalT[F](del)).equal(tf1.project, tf2.project)
+object TheseSyntax {
+  type \&/[+A, +B] = Ior[A, B]
+
+  object Both {
+    @inline def apply[A, B](a: A, b: B): A \&/ B = Ior.Both(a, b)
+  }
+
+  object This {
+    @inline def apply[A](a: A): A \&/ Nothing = Ior.Left(a)
+  }
+
+  object That {
+    @inline def apply[B](b: B): Nothing \&/ B = Ior.Right(b)
   }
 }

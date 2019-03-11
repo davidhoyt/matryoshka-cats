@@ -53,5 +53,10 @@ object BooleanSyntax {
   final class BooleanOps(private val self: Boolean) extends AnyVal {
     @inline def conjunction: WithConjunction = self.asInstanceOf[WithConjunction]
     @inline def disjunction: WithDisjunction = self.asInstanceOf[WithDisjunction]
+
+    /**
+      * @return `t` if true, `f` otherwise
+      */
+    @inline def fold[A](t: => A, f: => A): A = if (self) t else f
   }
 }

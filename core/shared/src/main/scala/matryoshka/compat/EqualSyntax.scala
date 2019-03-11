@@ -53,5 +53,6 @@ object EqualSyntax {
 
     @inline def apply[A](implicit e: Equal[A]): Equal[A] = e
     @inline def equal[A](f: (A, A) => Boolean): Equal[A] = Eq.instance(f)
+    @inline def equalBy[A, B](f: A => B)(implicit B: Equal[B]): Equal[A] = (a1: A, a2: A) => B.eqv(f(a1), f(a2))
   }
 }

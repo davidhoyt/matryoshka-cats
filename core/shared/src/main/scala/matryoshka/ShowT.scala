@@ -24,20 +24,21 @@ import slamdata.Predef._
 import cats._
 import simulacrum._
 
-@typeclass trait EqualT[T[_[_]]] {
-  def equal[F[_]: Functor](tf1: T[F], tf2: T[F])(implicit del: Delay[Equal, F]):
-      Boolean
+@typeclass trait ShowT[T[_[_]]] {
+  def show[F[_]: Functor](tf: T[F])(implicit del: Delay[Show, F]): Cord =
+    Cord(shows(tf))
 
-  def equalT[F[_]: Functor](delay: Delay[Equal, F]): Equal[T[F]] =
-    Equal.equal[T[F]](equal[F](_, _)(Functor[F], delay))
+  def shows[F[_]: Functor](tf: T[F])(implicit del: Delay[Show, F]): String =
+    show(tf).toString
+
+  def showT[F[_]: Functor](delay: Delay[Show, F]): Show[T[F]] =
+    Show.show[T[F]](show[F](_)(Functor[F], delay))
 }
 
 @SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
-object EqualT {
-  def recursiveT[T[_[_]]: RecursiveT]: EqualT[T] = new EqualT[T] {
-    def equal[F[_]: Functor]
-      (tf1: T[F], tf2: T[F])
-      (implicit del: Delay[Equal, F]): Boolean =
-      del(equalT[F](del)).equal(tf1.project, tf2.project)
+object ShowT {
+  def recursiveT[T[_[_]]: RecursiveT]: ShowT[T] = new ShowT[T] {
+    override def show[F[_]: Functor](tf: T[F])(implicit del: Delay[Show, F]) =
+      tf.cata(del(Cord.CordShow).show)
   }
 }

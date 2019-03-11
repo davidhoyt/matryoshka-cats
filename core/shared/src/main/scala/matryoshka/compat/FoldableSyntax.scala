@@ -15,29 +15,24 @@
  */
 
 package matryoshka
-
-import compat._
-import implicits._
+package compat
 
 import slamdata.Predef._
 
 import cats._
-import simulacrum._
 
-@typeclass trait EqualT[T[_[_]]] {
-  def equal[F[_]: Functor](tf1: T[F], tf2: T[F])(implicit del: Delay[Equal, F]):
-      Boolean
+trait FoldableSyntax {
+  import FoldableSyntax._
 
-  def equalT[F[_]: Functor](delay: Delay[Equal, F]): Equal[T[F]] =
-    Equal.equal[T[F]](equal[F](_, _)(Functor[F], delay))
+  @inline implicit final def toCompatFoldableOps[F[_], A](fa: F[A]): FoldableOps[F, A] = new FoldableOps[F, A](fa)
 }
 
-@SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
-object EqualT {
-  def recursiveT[T[_[_]]: RecursiveT]: EqualT[T] = new EqualT[T] {
-    def equal[F[_]: Functor]
-      (tf1: T[F], tf2: T[F])
-      (implicit del: Delay[Equal, F]): Boolean =
-      del(equalT[F](del)).equal(tf1.project, tf2.project)
+object FoldableSyntax {
+  final class FoldableOps[F[_], A](private val self: F[A]) extends AnyVal {
+    @inline def toStream(implicit F: Foldable[F]): Stream[A] =
+      F.foldRight[A, Stream[A]](self, Eval.now(Stream.empty[A]))((a, evalXs) => evalXs.map(xs => Stream.cons(a, xs))).value
+
+    @inline def toIList(implicit F: Foldable[F]): List[A] =
+      F.toList(self)
   }
 }

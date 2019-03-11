@@ -20,33 +20,7 @@ import cats._
 import cats.syntax.all._
 
 package object compat
-  extends IdSyntax
-    with DisjunctionSyntax
-    with SemigroupSyntax
-    with MonoidSyntax
-    with ApplicativeSyntax
-    with FunctorSyntax
-    with FlatMapSyntax
-    with CoflatMapSyntax
-    with ComonadSyntax
-    with TraverseSyntax
-    with BitraverseSyntax
-    with BifoldableSyntax
-    with ComposeSyntax
-    with CofreeSyntax
-    with NaturalTransformationSyntax
-    with EqualSyntax
-    with EitherTSyntax
-    with ShowSyntax
-    with OrderSyntax
-    with OptionSyntax
-    with OptionTSyntax
-    with UnzipSyntax
-    with TagSyntax
-    with BooleanSyntax
-    with Tuple2Syntax
-    with Tuple3Syntax
-    with FreeSyntax {
+  extends AllSyntax {
 
     //  def unfold[F[_], A](a: A)(f: A => F[A])(implicit F: Functor[F]): Cofree[F, A] =
     //    ana(a)(f, x => x)

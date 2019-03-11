@@ -15,21 +15,15 @@
  */
 
 package matryoshka
-package compat
 
-import slamdata.Predef._
+/** This is a workaround for a certain use case (e.g.,
+  * [[matryoshka.patterns.Diff]] and [[matryoshka.patterns.PotentialFailure]]).
+  * Define an instance of this rather than [[Recursive]] and [[Corecursive]]
+  * when possible.
+  */
+// NB: Not a `@typeclass` because we don’t want to inject these operations.
+trait BirecursiveT[T[_[_]]] extends RecursiveT[T] with CorecursiveT[T]
 
-trait OptionSyntax {
-  import OptionSyntax._
-
-  /** [[scala.Some.apply]] with a sometimes more convenient type. */
-  final def some[A](a: A): Option[A] = Some(a)
-
-  @inline implicit final def toCompatOptionOps[A](maybe: Option[A]): OptionOps[A] = new OptionOps[A](maybe)
-}
-
-object OptionSyntax {
-  final class OptionOps[A](private val self: Option[A]) extends AnyVal {
-    @inline def \/>[E](e: => E): E \/ A = self.fold[E \/ A](Left(e))(Right(_))
-  }
+object BirecursiveT {
+  def apply[T[_[_]]](implicit instance: BirecursiveT[T]): BirecursiveT[T] = instance
 }

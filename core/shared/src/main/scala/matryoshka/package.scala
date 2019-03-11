@@ -17,6 +17,7 @@
 import slamdata.Predef._
 
 import cats._
+import cats.data._
 import cats.free.{Free, Cofree, Yoneda}
 import cats.implicits._
 
@@ -27,7 +28,8 @@ import monocle._
 import matryoshka.compat._
 import matryoshka.data.free._
 import matryoshka.implicits._
-import matryoshka.patterns.EnvT
+import matryoshka.instances.fixedpoint.{BirecursiveOptionOps, Nat}
+import matryoshka.patterns.{CoEnv, EnvT}
 
 /** Generalized folds, unfolds, and refolds.
   *
@@ -608,4 +610,174 @@ package object matryoshka {
   def project[F[_]: Foldable, A](index: Int, fa: F[A]): Option[A] =
    if (index < 0) None
    else fa.toList.drop(index).headOption
+
+  /** The number of nodes in this structure.
+    *
+    * @group algebras
+    */
+  object size {
+    def apply[N]: PartiallyApplied[N] = new PartiallyApplied[N]
+
+    class PartiallyApplied[N] {
+      @DeviatesFromScalaZ
+      def apply[F[_]: Foldable](implicit N: Birecursive.Aux[N, Option])
+          : Algebra[F, N] =
+        _.foldRight(Eval.now(Nat.one[N]))((n1, en) => en.map(n2 => n1 + n2)).value
+    }
+  }
+
+  /** The largest number of hops from a node to a leaf.
+    *
+    * @group algebras
+    */
+  @DeviatesFromScalaZ
+  def height[F[_]: Foldable]: Algebra[F, Int] = _.foldRight(Eval.now(-1))((i, eb) => eb.map(b => i max b)).value + 1
+
+  /** Collects the set of all subtrees.
+    *
+    * @group algebras
+    */
+  def universe[F[_]: Foldable, A]: ElgotAlgebra[(A, ?), F, NonEmptyList[A]] =
+    p => NonEmptyList.nel(p._1, p._2.toList.toIList.unite)
+
+    /** Combines a tuple of zippable functors.
+    *
+    * @group algebras
+    */
+  @DeviatesFromScalaZ
+  def zipTuple[T, F[_]: Functor: Zip](implicit T: Recursive.Aux[T, F])
+      : Coalgebra[F, (T, T)] =
+    p => Zip[F].zip[T, T](Eval.later(p._1.project), Eval.later(p._2.project))
+
+//  /** Aligns “These” into a single structure, short-circuting when we hit a
+//    * “This” or “That”.
+//    *
+//    * @group algebras
+//    */
+//  def alignThese[T, F[_]: Align](implicit T: Recursive.Aux[T, F])
+//      : ElgotCoalgebra[T \/ ?, F, T \&/ T] =
+//    _.fold(_.left, _.left, (a, b) => a.project.align(b.project).right)
+
+  /** Merges a tuple of functors, if possible.
+    *
+    * @group algebras
+    */
+  def mergeTuple[T, F[_]: Functor: Merge](implicit T: Recursive.Aux[T, F])
+      : CoalgebraM[Option, F, (T, T)] =
+    p => Merge[F].merge[T, T](p._1.project, p._2.project)
+
+  /** Generates an infinite sequence from two seed values.
+    *
+    * @group algebras
+    */
+  def binarySequence[A](relation: (A, A) => A): Coalgebra[(A, ?), (A, A)] = {
+    case (a1, a2) =>
+      val c = relation(a1, a2)
+      (c, (a2, c))
+  }
+
+  def partition[A: Order]: Coalgebra[λ[α => Option[(A, (α, α))]], List[A]] = {
+    case Nil    => None
+    case h :: t => (h, (t.filter(_ <= h), t.filter(_ > h))).some
+  }
+
+  def join[A]: Algebra[λ[α => Option[(A, (α, α))]], List[A]] =
+    _.fold[List[A]](Nil) { case (a, (x, y)) => x ++ (a :: y) }
+
+  // NB: not in-place
+  def quicksort[A: Order](as: List[A]): List[A] = {
+    implicit val F: Functor[λ[α => Option[(A, (α, α))]]] =
+      new Functor[λ[α => Option[(A, (α, α))]]] {
+        def map[B, C] (fa: Option[(A, (B, B))])(f: B => C) =
+          fa.map(_.map(_.bimap(f, f)))
+      }
+    as.hylo[λ[α => Option[(A, (α, α))]], List[A]](join, partition)
+  }
+
+  /** Converts a fixed-point structure into a generic Tree.
+    * One use of this is using `.cata(toTree).drawTree` rather than `.show` to
+    * get a pretty-printed tree.
+    *
+    * @group algebras
+    */
+  def toTree[F[_]: Functor: Foldable]: Algebra[F, Tree[F[Unit]]] =
+    x => Tree.Node(x.void, x.toStream)
+
+  /** Returns (on the left) the first element that passes `f`.
+    */
+  def find[T](f: T => Boolean): T => T \/ T =
+    tf => (f(tf)).fold(tf.left, tf.right)
+
+  /** Replaces all instances of `original` in the structure with `replacement`.
+    *
+    * @group algebras
+    */
+  def substitute[T: Equal](original: T, replacement: T): T => T \/ T =
+    find[T](_ ≟ original)(_).leftMap(_ => replacement)
+
+  /** This implicit allows Delay implicits to be found when searching for a
+    * traditionally-defined instance.
+    */
+  implicit def delayEqual[F[_], A](implicit F: Delay[Equal, F], A: Equal[A])
+      : Equal[F[A]] =
+    F(A)
+
+  implicit def delayOrder[F[_], A](implicit F: Delay[Order, F], A: Order[A])
+      : Order[F[A]] =
+    F(A)
+
+  /** See `delayEqual`.
+    */
+  implicit def delayShow[F[_], A](implicit F: Delay[Show, F], A: Show[A]):
+      Show[F[A]] =
+    F(A)
+
+  implicit def recursiveTRecursive[T[_[_]]: RecursiveT, F[_]]: Recursive.Aux[T[F], F] =
+    new Recursive[T[F]] {
+      type Base[A] = F[A]
+
+      def project(t: T[F])(implicit F: Functor[F]): F[T[F]] =
+        RecursiveT[T].projectT[F](t)
+      override def cata[A](t: T[F])(f: Algebra[F, A])(implicit F: Functor[F]): A =
+        RecursiveT[T].cataT[F, A](t)(f)
+    }
+
+  implicit def corecursiveTCorecursive[T[_[_]]: CorecursiveT, F[_]]: Corecursive.Aux[T[F], F] =
+    new Corecursive[T[F]] {
+      type Base[A] = F[A]
+
+      def embed(t: F[T[F]])(implicit F: Functor[F]): T[F] =
+        CorecursiveT[T].embedT[F](t)
+      override def ana[A](a: A)(f: Coalgebra[F, A])(implicit F: Functor[F]): T[F] =
+        CorecursiveT[T].anaT[F, A](a)(f)
+    }
+
+  implicit def birecursiveTBirecursive[T[_[_]]: BirecursiveT, F[_]]: Birecursive.Aux[T[F], F] =
+    new Birecursive[T[F]] {
+      type Base[A] = F[A]
+
+      def project(t: T[F])(implicit F: Functor[F]): F[T[F]] =
+        BirecursiveT[T].projectT[F](t)
+      override def cata[A](t: T[F])(f: Algebra[F, A])(implicit F: Functor[F]): A =
+        BirecursiveT[T].cataT[F, A](t)(f)
+
+      def embed(t: F[T[F]])(implicit F: Functor[F]): T[F] =
+        BirecursiveT[T].embedT[F](t)
+      override def ana[A](a: A)(f: Coalgebra[F, A])(implicit F: Functor[F]): T[F] =
+        BirecursiveT[T].anaT[F, A](a)(f)
+    }
+
+  implicit def equalTEqual[T[_[_]], F[_]: Functor](implicit T: EqualT[T], F: Delay[Equal, F]): Equal[T[F]] =
+    T.equalT[F](F)
+
+  implicit def showTShow[T[_[_]], F[_]: Functor](implicit T: ShowT[T], F: Delay[Show, F]): Show[T[F]] =
+    T.showT[F](F)
+
+  implicit def birecursiveTFunctor[T[_[_]]: BirecursiveT, F[_, _]](implicit F: Bifunctor[F]): Functor[λ[α => T[F[α, ?]]]] =
+    new Functor[λ[α => T[F[α, ?]]]] {
+      implicit def RF[A]: Functor[F[A, ?]] = F.rightFunctor
+
+      def map[A, B](fa: T[F[A, ?]])(f: A => B) =
+        fa.transCata[T[F[B, ?]]](_.leftMap[B](f))
+    }
 }
