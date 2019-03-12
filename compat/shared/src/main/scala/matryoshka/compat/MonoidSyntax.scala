@@ -24,6 +24,12 @@ import cats._
 trait MonoidSyntax {
   import MonoidSyntax._
 
+  implicit def compatFunction1Monoid[B]: Monoid[B => B] =
+    new Monoid[B => B] {
+      override val empty: B => B = b => b
+      override def combine(x: B => B, y: B => B): B => B = x compose y
+    }
+
   @inline implicit final def toCompatMonoidInstanceOps[A](self: Monoid[A]): MonoidInstanceOps[A] = new MonoidInstanceOps[A](self)
 }
 

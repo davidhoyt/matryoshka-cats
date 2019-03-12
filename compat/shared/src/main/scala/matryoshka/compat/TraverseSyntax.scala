@@ -26,6 +26,8 @@ import cats.data._
 trait TraverseSyntax {
   import TraverseSyntax._
 
+  type TraverseWithFolds[F[_]] = TraverseSyntax.TraverseWithFolds[F]
+
   @inline implicit final def toCompatTraverseOps[F[_], A](fa: F[A]): TraverseOps[F, A] = new TraverseOps[F, A](fa)
 }
 
@@ -55,6 +57,18 @@ object TraverseSyntax {
         (s2, b) = f(s1, a)
         _ <- State.set(s2)
       } yield b)
+
+    def foldLShape[F[_]: Traverse, A, B](fa: F[A], z: B)(f: (B, A) => B): (B, F[Unit]) =
+      runTraverseS(fa, z)(a => State.modify(f(_, a)))
+
+    def foldLeft[F[_]: Traverse, A, B](fa: F[A], z: B)(f: (B, A) => B): B =
+      foldLShape(fa, z)(f)._1
+
+    def foldMap[F[_]: Traverse, A, B](fa: F[A])(f: A => B)(implicit F: Monoid[B]): B =
+      foldLShape(fa, F.empty)((b, a) => F.combine(b, f(a)))._1
+
+    def foldRight[F[_]: Traverse, A, B](fa: F[A], z: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
+      foldMap[F, A, Eval[B] => Eval[B]](fa)(a => eb => f(a, eb)) apply z
   }
 
   final class TraverseOps[F[_], A](private val fa: F[A]) extends AnyVal {
@@ -67,7 +81,15 @@ object TraverseSyntax {
     def zipWithL[B, C](fb: F[B])(f: (A, Option[B]) => C)(implicit F: Traverse[F]): F[C] =
       zipWith(fb)(f)._2
 
+    def zipWithR[B, C](fb: F[B])(f: (Option[A], B) => C)(implicit F: Traverse[F]): F[C] =
+      fb.zipWith[A, C](fa)((b, oa) => f(oa, b))._2
+
     def mapAccumL[S, B](z: S)(f: (S, A) => (S, B))(implicit F: Traverse[F]): (S, F[B]) =
       internal.mapAccumL(fa, z)(f)
+  }
+
+  trait TraverseWithFolds[F[_]] extends Traverse[F] { self =>
+    override def foldLeft[A, B](fa: F[A], b: B)(f: (B, A) => B): B = internal.foldLeft(fa, b)(f)(self)
+    override def foldRight[A, B](fa: F[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] = internal.foldRight(fa, lb)(f)(self)
   }
 }

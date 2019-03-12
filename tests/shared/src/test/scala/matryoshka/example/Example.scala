@@ -37,11 +37,7 @@ final case class TwoLists[A](first: List[A], second: List[A]) extends Example[A]
 @SuppressWarnings(Array("org.wartremover.warts.NonUnitStatements"))
 object Example {
   implicit val traverse: Traverse[Example] =
-    new Traverse[Example] {
-      override def foldLeft[A, B](fa: Example[A], b: B)(f: (B, A) => B): B = ???
-
-      override def foldRight[A, B](fa: Example[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] = ???
-
+    new TraverseWithFolds[Example] {
       override def traverse[G[_], A, B](fa: Example[A])(f: A => G[B])(implicit G: Applicative[G]): G[Example[B]] =
         fa match {
           case Empty()        => G.point(Empty())
