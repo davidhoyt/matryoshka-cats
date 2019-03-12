@@ -48,7 +48,7 @@ lazy val root = project.in(file("."))
     releaseCrossBuild := false
   )
   .aggregate(
-    //kernelJS, compatJS, coreJS, monocleJS, scalacheckJS,  testsJS,
+    kernelJS, compatJS, coreJS, monocleJS, scalacheckJS,  testsJS,
     kernelJVM, compatJVM, coreJVM, monocleJVM, scalacheckJVM, testsJVM
     //docs
   )
@@ -103,27 +103,35 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform)
   */
 lazy val repl = crossProject(JVMPlatform, JSPlatform) dependsOn (tests % "compile->test") settings standardSettings settings (
   console := (console in Test).value,
-  scalacOptions --= Seq("-Yno-imports", "-Ywarn-unused-import"),
+  scalacOptions ~= (_ filter Seq("-Yno-imports", "-Ywarn-unused-import").contains),
   initialCommands in console += """
     |import cats._
     |import cats.implicits._
     |import matryoshka._
+    |import matryoshka.kernel._
+    |import matryoshka.compat._
     |import matryoshka.data._
     |import matryoshka.implicits._
     |import matryoshka.patterns._
-    |import matryoshka.compat_
   """.stripMargin.trim
 )
 
 lazy val replJVM = repl.jvm
-//lazy val kernelJS  = kernel.js
+
+lazy val kernelJS  = kernel.js
 lazy val kernelJVM = kernel.jvm
-//lazy val compatJS  = compat.js
+
+lazy val compatJS  = compat.js
 lazy val compatJVM = compat.jvm
-//lazy val coreJS  = core.js
+
+lazy val coreJS  = core.js
 lazy val coreJVM = core.jvm
+
+lazy val monocleJS = monocle.js
 lazy val monocleJVM = monocle.jvm
-//lazy val scalacheckJS  = scalacheck.js
+
+lazy val scalacheckJS  = scalacheck.js
 lazy val scalacheckJVM = scalacheck.jvm
-//lazy val testsJS  = tests.js
+
+lazy val testsJS  = tests.js
 lazy val testsJVM = tests.jvm
