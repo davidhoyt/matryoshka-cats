@@ -17,14 +17,14 @@
 package matryoshka
 package example
 
+import kernel._
 import compat._
 
 import slamdata.Predef._
 
 import cats._
 import cats.kernel.Eq
-import cats.syntax.all._
-import cats.instances.all._
+import cats.implicits._
 
 sealed abstract class Example[A]
 final case class Empty[A]()                                   extends Example[A]

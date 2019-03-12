@@ -18,6 +18,7 @@ package matryoshka
 
 import patterns.EnvT
 
+import kernel._
 import compat._
 
 import scala.{Option, Unit}

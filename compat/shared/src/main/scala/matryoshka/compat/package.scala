@@ -16,6 +16,8 @@
 
 package matryoshka
 
+import kernel._
+
 import cats._
 import cats.syntax.all._
 

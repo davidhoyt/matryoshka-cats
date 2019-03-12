@@ -18,6 +18,8 @@ package matryoshka
 
 import slamdata.Predef._
 
+import kernel._
+
 import cats._
 
 /** This is a workaround for a certain use case (e.g.,

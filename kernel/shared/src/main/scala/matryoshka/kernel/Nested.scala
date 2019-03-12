@@ -15,6 +15,8 @@
  */
 
 package matryoshka
+package kernel
 
-sealed abstract class Hole
-case object Hole extends Hole
+sealed abstract class Nested[F[_], G[_]] {
+  type λ[A] = F[G[A]]
+}

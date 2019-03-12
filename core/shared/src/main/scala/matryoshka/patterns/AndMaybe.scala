@@ -19,6 +19,7 @@ package patterns
 
 import slamdata.Predef._
 
+import kernel._
 import compat._
 
 import cats._

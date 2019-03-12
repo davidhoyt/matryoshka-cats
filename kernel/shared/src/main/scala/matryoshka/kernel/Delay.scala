@@ -15,6 +15,7 @@
  */
 
 package matryoshka
+package kernel
 
 import cats._
 

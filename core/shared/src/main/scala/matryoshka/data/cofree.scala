@@ -19,6 +19,7 @@ package data
 
 import patterns.EnvT
 
+import kernel._
 import compat._
 
 import cats._

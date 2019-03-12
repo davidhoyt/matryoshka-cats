@@ -23,9 +23,7 @@ import slamdata.Predef._
 import simulacrum._
 
 import cats._
-import cats.kernel.Eq
-import cats.syntax.all._
-import cats.instances.all._
+import cats.implicits._
 
 /** Like `Zip`, but it can fail to merge, so it’s much more general.
   */
@@ -40,7 +38,7 @@ import cats.instances.all._
 
 @java.lang.SuppressWarnings(scala.Array("org.wartremover.warts.PublicInference"))
 object Merge {
-  implicit def fromTraverse[F[_]: Traverse](implicit E: Eq[F[Unit]]): Merge[F] =
+  implicit def fromTraverse[F[_]: Traverse](implicit E: Equal[F[Unit]]): Merge[F] =
     new Merge[F] {
       def merge[A, B](fa: F[A], fb: => F[B]): Option[F[(A, B)]] = {
         val instFb = fb

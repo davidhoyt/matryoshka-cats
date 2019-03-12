@@ -15,7 +15,21 @@
  */
 
 package matryoshka
+package kernel
 
-sealed abstract class Nested[F[_], G[_]] {
-  type λ[A] = F[G[A]]
+import slamdata.Predef._
+
+import simulacrum.typeclass
+
+/** Provides a type describing the pattern functor of some {co}recursive type
+  * `T`. For standard fixed-point types like [[matryoshka.data.Fix]],
+  * `Based[Fix[F]]#Base` is simply `F`. However, directly recursive types
+  * generally have a less obvious pattern functor. E.g., `Based[Cofree[F,
+  * A]]#Base` is `EnvT[A, F, ?]`.
+  */
+@typeclass trait Based[T] {
+  type Base[A]
 }
+
+@SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
+object Based

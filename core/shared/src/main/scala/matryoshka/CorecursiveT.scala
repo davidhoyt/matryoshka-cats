@@ -16,6 +16,7 @@
 
 package matryoshka
 
+import kernel._
 import cats._
 
 /** This is a workaround for a certain use case (e.g.,

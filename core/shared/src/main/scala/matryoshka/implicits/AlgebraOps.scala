@@ -17,7 +17,9 @@
 package matryoshka
 package implicits
 
+import kernel._
 import compat._
+
 import cats._
 
 sealed class AlgebraOps[F[_], A](self: Algebra[F, A]) {

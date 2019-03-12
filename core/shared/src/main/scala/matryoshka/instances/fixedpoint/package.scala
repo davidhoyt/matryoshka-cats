@@ -19,6 +19,7 @@ package instances
 
 import slamdata.Predef._
 
+import kernel._
 import compat._
 
 import data._
@@ -317,6 +318,7 @@ package object fixedpoint {
 
     // TODO: Check this!
     @tailrec
+    @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
     override def tailRecM[Z, B](z: Z)(f: Z => Partial[Either[Z, B]]): Partial[B] = {
       type Embedded = Nu[Either[Either[Z, B], ?]] { type A = Either[Either[Z, B], B] }
       val fa: Embedded = f(z).asInstanceOf[Embedded]

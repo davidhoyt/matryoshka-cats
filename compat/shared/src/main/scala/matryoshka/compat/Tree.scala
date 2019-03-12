@@ -26,6 +26,15 @@ import cats.implicits._
 /**
  * A multi-way tree, also known as a rose tree. Also known as Cofree[Stream, A].
  */
+@SuppressWarnings(Array(
+  "org.wartremover.warts.Equals",
+  "org.wartremover.warts.NonUnitStatements",
+  "org.wartremover.warts.PublicInference",
+  "org.wartremover.warts.Recursion",
+  "org.wartremover.warts.TraversableOps",
+  "org.wartremover.warts.Var",
+  "org.wartremover.warts.While"
+))
 sealed abstract class Tree[A] {
 
   import Tree._
@@ -153,6 +162,9 @@ sealed abstract class Tree[A] {
 //  }
 }
 
+@SuppressWarnings(Array(
+  "org.wartremover.warts.Recursion"
+))
 sealed abstract class TreeInstances {
 //  implicit val treeInstance: Traverse1[Tree] with Monad[Tree] with Comonad[Tree] with Align[Tree] with Zip[Tree] = new Traverse1[Tree] with Monad[Tree] with Comonad[Tree] with Align[Tree] with Zip[Tree] {
 //    def point[A](a: => A): Tree[A] = Tree.Leaf(a)
@@ -205,6 +217,15 @@ sealed abstract class TreeInstances {
     }
 }
 
+@SuppressWarnings(Array(
+  "org.wartremover.warts.Equals",
+  "org.wartremover.warts.NonUnitStatements",
+  "org.wartremover.warts.PublicInference",
+  "org.wartremover.warts.Recursion",
+  "org.wartremover.warts.TraversableOps",
+  "org.wartremover.warts.Var",
+  "org.wartremover.warts.While"
+))
 object Tree extends TreeInstances {
   /**
    * Node represents a tree node that may have children.
@@ -255,6 +276,10 @@ object Tree extends TreeInstances {
     }
 }
 
+@SuppressWarnings(Array(
+  "org.wartremover.warts.Recursion",
+  "org.wartremover.warts.TraversableOps"
+))
 private trait TreeEqual[A] extends Equal[Tree[A]] {
   def A: Equal[A]
 

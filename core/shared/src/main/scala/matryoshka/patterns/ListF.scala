@@ -21,6 +21,7 @@ import slamdata.Predef._
 
 import Recursive.ops._
 
+import kernel._
 import compat._
 
 import cats._

@@ -48,13 +48,25 @@ lazy val root = project.in(file("."))
     releaseCrossBuild := false
   )
   .aggregate(
-    //coreJS, monocleJS, scalacheckJS,  testsJS,
-    coreJVM, monocleJVM, scalacheckJVM, testsJVM
+    //kernelJS, compatJS, coreJS, monocleJS, scalacheckJS,  testsJS,
+    kernelJVM, compatJVM, coreJVM, monocleJVM, scalacheckJVM, testsJVM
     //docs
   )
   .enablePlugins(AutomateHeaderPlugin)
 
+lazy val kernel = crossProject(JVMPlatform, JSPlatform).in(file("kernel"))
+  .settings(name := "matryoshka-kernel")
+  .settings(standardSettings ++ publishSettings: _*)
+  .enablePlugins(AutomateHeaderPlugin)
+
+lazy val compat = crossProject(JVMPlatform, JSPlatform).in(file("compat"))
+  .dependsOn(kernel)
+  .settings(name := "matryoshka-compat")
+  .settings(standardSettings ++ publishSettings: _*)
+  .enablePlugins(AutomateHeaderPlugin)
+
 lazy val core = crossProject(JVMPlatform, JSPlatform).in(file("core"))
+  .dependsOn(compat)
   .settings(name := "matryoshka-core")
   .settings(standardSettings ++ publishSettings: _*)
   .enablePlugins(AutomateHeaderPlugin)
@@ -99,10 +111,15 @@ lazy val repl = crossProject(JVMPlatform, JSPlatform) dependsOn (tests % "compil
     |import matryoshka.data._
     |import matryoshka.implicits._
     |import matryoshka.patterns._
+    |import matryoshka.compat_
   """.stripMargin.trim
 )
 
 lazy val replJVM = repl.jvm
+//lazy val kernelJS  = kernel.js
+lazy val kernelJVM = kernel.jvm
+//lazy val compatJS  = compat.js
+lazy val compatJVM = compat.jvm
 //lazy val coreJS  = core.js
 lazy val coreJVM = core.jvm
 lazy val monocleJVM = monocle.jvm

@@ -19,6 +19,7 @@ package data
 
 import patterns.CoEnv
 
+import kernel._
 import compat._
 
 import cats._

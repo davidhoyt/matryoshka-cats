@@ -20,6 +20,7 @@ import slamdata.Predef._
 import matryoshka.implicits._
 import matryoshka.patterns._
 
+import kernel._
 import compat._
 
 import cats._

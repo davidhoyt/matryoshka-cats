@@ -17,6 +17,7 @@
 package matryoshka
 package patterns
 
+import kernel._
 import compat._
 
 import cats._
