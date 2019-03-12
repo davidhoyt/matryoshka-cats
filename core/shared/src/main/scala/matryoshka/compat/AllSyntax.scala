@@ -48,3 +48,4 @@ trait AllSyntax
     with Tuple3Syntax
     with FreeSyntax
     with FoldableSyntax
+    with EvalSyntax

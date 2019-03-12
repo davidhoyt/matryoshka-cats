@@ -32,6 +32,7 @@ trait DisjunctionSyntax {
 
   @inline implicit final def toCompatDisjunctionValueOps[A](self: A): DisjunctionValueOps[A] = new DisjunctionValueOps[A](self)
   @inline implicit final def toCompatDisjunctionOps[A, B](given: A \/ B): DisjunctionOps[A, B] = new DisjunctionOps[A, B](given)
+  @inline implicit final def toCompatDisjunctionLeftProjectionOps[A, B](given: scala.Either.LeftProjection[A, B]): DisjunctionLeftProjectionOps[A, B] = new DisjunctionLeftProjectionOps[A, B](given)
 }
 
 object DisjunctionSyntax {
@@ -62,5 +63,11 @@ object DisjunctionSyntax {
         case Left(a) => Functor[F].map(f(a))(c => Left[C, D](c))
         case Right(b) => Functor[F].map(g(b))(d => Right[C, D](d))
       }
+
+    //@inline def left[C]: A \/ B \/ C = -\/(self)
+  }
+
+  final class DisjunctionLeftProjectionOps[A, B](private val self: scala.Either.LeftProjection[A, B]) extends AnyVal {
+    @inline implicit def left[C]: A \/ B \/ C = -\/(self.e)
   }
 }

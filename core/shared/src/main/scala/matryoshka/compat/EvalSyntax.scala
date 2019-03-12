@@ -17,19 +17,13 @@
 package matryoshka
 package compat
 
-import slamdata.Predef._
+//import slamdata.Predef._
+//
+//import cats._
 
-import cats.~>
-import cats.arrow._
-
-trait NaturalTransformationSyntax {
-  val NaturalTransformation = NaturalTransformationSyntax.NaturalTransformation
-
-  implicit def natToFunction[F[_], G[_], A](f: F ~> G): F[A] => G[A] = x => f(x)
+trait EvalSyntax {
+  //@inline final implicit def toCompatEvalInstance[A](given: => A): Eval[A] = Eval.later(given)
 }
 
-object NaturalTransformationSyntax {
-  object NaturalTransformation {
-    @inline final def refl[F[_]]: F ~> F = FunctionK.id[F]
-  }
+object EvalSyntax {
 }
