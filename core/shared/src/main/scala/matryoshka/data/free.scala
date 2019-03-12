@@ -32,13 +32,11 @@ trait FreeInstances {
       _.run.fold(_.point[Free[F, ?]], Free.liftF(_).join),
       t => CoEnv(t.resume.swap))
 
-  @DeviatesFromScalaZ
   implicit def freeEqual[F[_]: Traverse](implicit F: Delay[Equal, F]):
       Delay[Equal, Free[F, ?]] =
     new Delay[Equal, Free[F, ?]] {
       def apply[A](eq: Equal[A]): Equal[Free[F, A]] = {
         implicit val coenvʹ: Delay[Equal, CoEnv[A, F, ?]] = CoEnv.equal(eq, F)
-        implicit val next = coenvʹ(Equal.unit)
         Birecursive.equal[Free[F, A], CoEnv[A, F, ?]]
       }
     }

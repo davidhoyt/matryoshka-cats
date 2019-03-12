@@ -303,7 +303,7 @@ package object matryoshka {
     *
     * @group dist
     */
-  @DeviatesFromScalaZ
+  @Deviation("Type parameters were added to cosequence to help type inference.")
   def distDistributive[F[_]: Functor, G[_]: Distributive]: (F ∘ G)#λ ~> (G ∘ F)#λ =
     new DistributiveLaw[F, G] {
       def apply[A](fga: F[G[A]]): G[F[A]] = fga.cosequence[G, A]
@@ -358,7 +358,7 @@ package object matryoshka {
   // TODO: Should be able to generalize this over `Recursive.Aux[T, EnvT[…]]`
   //       somehow, then it wouldn’t depend on Scalaz and would work with any
   //       `Cofree` representation.
-  @DeviatesFromScalaZ
+  @Deviation("Uses Eval with Cofree and provides some minor optimizations.")
   @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
   def distGHisto[F[_]: Functor,  H[_]: Functor](k: DistributiveLaw[F, H]): DistributiveLaw[F, Cofree[H, ?]] =
     new DistributiveLaw[F, Cofree[H, ?]] {
@@ -385,7 +385,6 @@ package object matryoshka {
     *
     * @group dist
     */
-  @DeviatesFromScalaZ
   def distApo[T, F[_]: Functor](implicit T: Recursive.Aux[T, F])
       : DistributiveLaw[T \/ ?, F] =
     distGApo[F, T](T.project(_))
@@ -394,7 +393,6 @@ package object matryoshka {
     *
     * @group dist
     */
-  @DeviatesFromScalaZ
   def distGApo[F[_] : Functor, B](g: Coalgebra[F, B]): DistributiveLaw[B \/ ?, F] =
     new DistributiveLaw[B \/ ?, F] {
       def apply[α](m: B \/ F[α]): F[B \/ α] = m.bitraverse(g(_), x => x)
@@ -405,7 +403,6 @@ package object matryoshka {
     *
     * @group dist
     */
-  @DeviatesFromScalaZ
   def distGApoT[F[_]: Functor, M[_]: Functor, B](
     g: Coalgebra[F, B], k: DistributiveLaw[M, F]): DistributiveLaw[EitherT[M, B, ?], F] =
     new DistributiveLaw[EitherT[M, B, ?], F] {
@@ -601,7 +598,7 @@ package object matryoshka {
     *
     * @group algtrans
     */
-  @DeviatesFromScalaZ
+  @Deviation("Uses Eval.")
   implicit def GAlgebraZip[W[_]: Functor, F[_]: Functor]:
       Zip[GAlgebra[W, F, ?]] =
     new Zip[GAlgebra[W, F, ?]] {
@@ -618,7 +615,7 @@ package object matryoshka {
     *
     * @group algtrans
     */
-  @DeviatesFromScalaZ
+  @Deviation("Uses Eval.")
   implicit def ElgotAlgebraMZip[W[_]: Functor, M[_]: Applicative, F[_]: Functor]:
       Zip[ElgotAlgebraM[W, M, F, ?]] =
     new Zip[ElgotAlgebraM[W, M, F, ?]] {
@@ -670,7 +667,7 @@ package object matryoshka {
     *
     * @group algebras
     */
-  @DeviatesFromScalaZ
+  @Deviation("Uses Eval.")
   def count[T: Equal, F[_]: Functor: Foldable]
     (form: T)
       : ElgotAlgebra[(T, ?), F, Int] =
@@ -684,7 +681,7 @@ package object matryoshka {
     def apply[N]: PartiallyApplied[N] = new PartiallyApplied[N]
 
     class PartiallyApplied[N] {
-      @DeviatesFromScalaZ
+      @Deviation("Uses Eval.")
       def apply[F[_]: Foldable](implicit N: Birecursive.Aux[N, Option])
           : Algebra[F, N] =
         _.foldRight(Eval.now(Nat.one[N]))((n1, en) => en.map(n2 => n1 + n2)).value
@@ -695,7 +692,7 @@ package object matryoshka {
     *
     * @group algebras
     */
-  @DeviatesFromScalaZ
+  @Deviation("Uses Eval.")
   def height[F[_]: Foldable]: Algebra[F, Int] = _.foldRight(Eval.now(-1))((i, eb) => eb.map(b => i max b)).value + 1
 
   /** Collects the set of all subtrees.
@@ -709,7 +706,7 @@ package object matryoshka {
     *
     * @group algebras
     */
-  @DeviatesFromScalaZ
+  @Deviation("Uses Eval.")
   def zipTuple[T, F[_]: Functor: Zip](implicit T: Recursive.Aux[T, F])
       : Coalgebra[F, (T, T)] =
     p => Zip[F].zip[T, T](Eval.later(p._1.project), Eval.later(p._2.project))

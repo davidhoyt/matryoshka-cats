@@ -26,20 +26,18 @@ import cats._
 import cats.free._
 
 trait CofreeInstances {
-  @DeviatesFromScalaZ
+  @Deviation("Uses Eval.")
   implicit def cofreeBirecursive[F[_], A]
       : Birecursive.Aux[Cofree[F, A], EnvT[A, F, ?]] =
     Birecursive.fromAlgebraIso(
       t => Cofree(t.ask, Eval.later(t.lower)),
       t => EnvT((t.head, t.tail.value)))
 
-  @DeviatesFromScalaZ
   implicit def cofreeEqual[F[_]: Traverse](implicit F: Delay[Equal, F]):
       Delay[Equal, Cofree[F, ?]] =
     new Delay[Equal, Cofree[F, ?]] {
       def apply[A](eq: Equal[A]): Equal[Cofree[F, A]] = {
         implicit val envtʹ: Delay[Equal, EnvT[A, F, ?]] = EnvT.equal(eq, F)
-        implicit val next = envtʹ(Equal.unit)
         Birecursive.equal[Cofree[F, A], EnvT[A, F, ?]]
       }
     }

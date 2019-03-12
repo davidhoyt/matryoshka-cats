@@ -69,7 +69,7 @@ sealed abstract class CoEnvInstances extends CoEnvInstances0 {
 
   // TODO: Need to have lower-prio instances of Bifoldable, with
   //       corresponding constraint on F.
-  @DeviatesFromScalaZ
+  @Deviation("Defines bifoldRight and renames bitraverseImpl.")
   implicit def bitraverse[F[_]: Traverse]: Bitraverse[CoEnv[?, F, ?]] =
     new Bitraverse[CoEnv[?, F, ?]] {
       override def bifoldLeft[A, B, C](fab: CoEnv[A, F, B], c: C)(f: (C, A) => C, g: (C, B) => C): C =
@@ -84,7 +84,7 @@ sealed abstract class CoEnvInstances extends CoEnvInstances0 {
         fab.run.bitraverse(f, _.traverse(g)).map(CoEnv(_))
     }
 
-  @DeviatesFromScalaZ
+  @Deviation("Uses explicit conversion to help the compiler.")
   implicit def traverse[F[_]: Traverse, E]: Traverse[CoEnv[E, F, ?]] =
     toCompatBitraverseInstanceOps[CoEnv[?, F, ?]](bitraverse[F]).rightTraverse
 
@@ -107,7 +107,7 @@ sealed abstract class CoEnvInstances0 {
   implicit def functor[F[_]: Functor, E]: Functor[CoEnv[E, F, ?]] =
     bifunctor[F].rightFunctor
 
-  @DeviatesFromScalaZ
+  @Deviation("Defines bifoldLeft and bifoldRight using Eval.")
   implicit def bifoldable[F[_]: Foldable]: Bifoldable[CoEnv[?, F, ?]] =
     new Bifoldable[CoEnv[?, F, ?]] {
       override def bifoldMap[A, B, M: Monoid](fa: CoEnv[A, F, B])(f: A => M, g: B => M): M =
@@ -120,7 +120,7 @@ sealed abstract class CoEnvInstances0 {
         fa.run.fold(f(_, z), _.foldRight(z)(g))
     }
 
-  @DeviatesFromScalaZ
+  @Deviation("Uses explicit conversion to help the compiler.")
   implicit def foldable[F[_]: Foldable, E]: Foldable[CoEnv[E, F, ?]] =
     toCompatBifoldableInstanceOps[CoEnv[?, F, ?]](bifoldable[F]).rightFoldable
 

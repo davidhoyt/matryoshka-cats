@@ -17,9 +17,11 @@
 package matryoshka
 package compat
 
+import slamdata.Predef._
+
 /**
-  * Indicates that an implementation deviates from its scalaz-based version.
+  * Indicates that an implementation deviates from its ScalaZ-based version.
   *
   * Simply a marker for reference.
   */
-class DeviatesFromScalaZ extends scala.annotation.StaticAnnotation
+class Deviation(description: String) extends scala.annotation.StaticAnnotation

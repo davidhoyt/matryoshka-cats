@@ -56,7 +56,7 @@ sealed abstract class AndMaybeInstances {
   implicit def traverse[A]: Traverse[AndMaybe[A, ?]] =
     bitraverse.rightTraverse[A]
 
-  @DeviatesFromScalaZ
+  @Deviation("Defines bifoldRight and renames bitraverseImpl.")
   implicit val bitraverse: Bitraverse[AndMaybe] =
     new Bitraverse[AndMaybe] {
 

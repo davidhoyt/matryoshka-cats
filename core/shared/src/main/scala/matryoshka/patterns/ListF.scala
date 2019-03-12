@@ -77,7 +77,7 @@ object ListF {
       }
     }
 
-  @DeviatesFromScalaZ
+  @Deviation("Defines bifoldRight and renames bitraverseImpl.")
   implicit def bitraverse: Bitraverse[ListF] = new Bitraverse[ListF] {
     override def bifoldLeft[A, B, C](fab: ListF[A, B], c: C)(f: (C, A) => C, g: (C, B) => C): C =
       fab match {

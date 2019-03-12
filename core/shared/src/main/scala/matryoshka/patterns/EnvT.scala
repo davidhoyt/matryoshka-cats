@@ -67,7 +67,7 @@ sealed abstract class EnvTInstances0 extends EnvTInstances1 {
 }
 
 sealed abstract class EnvTInstances extends EnvTInstances0 {
-  @DeviatesFromScalaZ
+  @Deviation("Uses Cobind instead of just Comonad.")
   implicit def comonad[E, W[_]](implicit W0: Comonad[W]): Comonad[EnvT[E, W, ?]] =
     new EnvTComonad[E, W] { implicit val W: Comonad[W] with Cobind[W] = W0 }
 
@@ -89,7 +89,7 @@ sealed abstract class EnvTInstances extends EnvTInstances0 {
       implicit val F: Traverse[F] = F0
     }
 
-  @DeviatesFromScalaZ
+  @Deviation("Uses explicit conversion to help the compiler.")
   implicit def traverse[E, F[_]: Traverse]: Traverse[EnvT[E, F, ?]] =
     toCompatBitraverseInstanceOps[EnvT[?, F, ?]](bitraverse[F]).rightTraverse
 }
@@ -97,7 +97,7 @@ sealed abstract class EnvTInstances extends EnvTInstances0 {
 trait EnvTFunctions {
   def envT[E, W[_], A](v: (E, W[A])): EnvT[E, W, A] = EnvT(v)
 
-  @DeviatesFromScalaZ
+  @Deviation("Uses Eval.")
   def cofreeIso[E, W[_]]: AlgebraIso[EnvT[E, W, ?], Cofree[W, E]] =
     AlgebraIso[EnvT[E, W, ?], Cofree[W, E]](
       et => Cofree(et.ask, Eval.later(et.lower)))(
@@ -114,7 +114,7 @@ private trait EnvTFunctor[E, W[_]] extends Functor[EnvT[E, W, ?]] {
   override final def map[A, B](fa: EnvT[E, W, A])(f: A => B) = fa map f
 }
 
-@DeviatesFromScalaZ
+@Deviation("Defines bifoldRight and renames bitraverseImpl.")
 private trait EnvTBitraverse[F[_]]
     extends Bitraverse[EnvT[?, F, ?]]
     // with EnvTBiFunctor[F]
@@ -144,7 +144,7 @@ private trait EnvTCobind[E, W[_]] extends Cobind[EnvT[E, W, ?]] with EnvTFunctor
     cojoin(fa).map(f)
 }
 
-@DeviatesFromScalaZ
+@Deviation("Cobind defines methods that Coflatmap does not. W extends Cobind in addition to Comonad.")
 private trait EnvTComonad[E, W[_]] extends Comonad[EnvT[E, W, ?]] with EnvTCobind[E, W] {
   implicit def W: Comonad[W] with Cobind[W]
 

@@ -144,7 +144,7 @@ package object fixedpoint {
       : BirecursiveListFOps[T[ListF[A, ?]], A] =
     new BirecursiveListFOps[T[ListF[A, ?]], A](self)
 
-  @DeviatesFromScalaZ
+  @Deviation("Implements foldLeft and foldRight using Eval.")
   implicit def recursiveTListFFoldable[T[_[_]]: RecursiveT]: Foldable[λ[α => T[ListF[α, ?]]]] =
     new Foldable[λ[α => T[ListF[α, ?]]]] {
       override def foldMap[A, B: Monoid](fa: T[ListF[A, ?]])(f: A ⇒ B) =
@@ -166,7 +166,7 @@ package object fixedpoint {
         }
     }
 
-  @DeviatesFromScalaZ
+  @Deviation("Uses empty for zero and combine instead of append.")
   implicit def birecursiveListFMonoid[T, A](implicit T: Birecursive.Aux[T, ListF[A, ?]])
       : Monoid[T] =
     new Monoid[T] {
@@ -298,7 +298,7 @@ package object fixedpoint {
       pf.lift ⋙ fromOption
   }
 
-  @DeviatesFromScalaZ
+  @Deviation("Implements foldLeft and foldRight using Eval.")
   implicit def recursiveTEitherFoldable[T[_[_]]: RecursiveT]
       : Foldable[λ[α => T[α \/ ?]]] =
     new Foldable[λ[α => T[α \/ ?]]] {
@@ -312,7 +312,7 @@ package object fixedpoint {
         fa.cata[Eval[B]](_.leftMap(f(_, z)).merge)
     }
 
-  @DeviatesFromScalaZ
+  @Deviation("Uses pure instead of point and implements tailRecM.")
   implicit val partialMonad: Monad[Partial] = new Monad[Partial] {
     override def pure[A](a: A): Partial[A] = Partial.now(a)
 
@@ -339,7 +339,7 @@ package object fixedpoint {
 
     /** Returns `left` if the result was found within the given number of steps.
       */
-    @DeviatesFromScalaZ
+    @Deviation("Uses left on Either.LeftProjection instead of left on Disjunction.")
     def runFor[N](steps: N)(implicit N: Recursive.Aux[N, Option]): A \/ Partial[A] =
       (steps, self).anaM[Partial[A]] {
         case (r, p) =>
@@ -363,7 +363,7 @@ package object fixedpoint {
     /** If two `Partial`s eventually have the same value, then they are
       * equivalent.
       */
-    @DeviatesFromScalaZ
+    @Deviation("ApplicativeBuilder is deprecated and uses mapN instead.")
     def ≈(that: Partial[A])(implicit A: Equal[A]): Partial[Boolean] =
       (self, that).mapN(_ ≟ _)
   }
