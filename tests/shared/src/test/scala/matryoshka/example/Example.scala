@@ -17,14 +17,27 @@
 package matryoshka
 package example
 
+import slamdata.Predef._
+
 import kernel._
 import compat._
+import helpers._
+import implicits._
+import patterns._
 
-import slamdata.Predef._
+import scalacheck.arbitrary._
 
 import cats._
 import cats.kernel.Eq
 import cats.implicits._
+
+import cats.laws.discipline._
+import cats.kernel.laws.discipline._
+
+import org.scalacheck._
+import org.specs2.ScalaCheck
+import org.specs2.mutable._
+import org.typelevel.discipline.specs2.mutable._
 
 sealed abstract class Example[A]
 final case class Empty[A]()                                   extends Example[A]
@@ -80,4 +93,45 @@ object Example {
       }
     }
 
+    implicit val diffable: Diffable[Example] = new Diffable[Example] {
+    def diffImpl[T[_[_]]: BirecursiveT](l: T[Example], r: T[Example]):
+        Option[DiffT[T, Example]] =
+      (l.project, r.project) match {
+        case (l @ Empty(),        r @ Empty())        => localDiff(l, r).some
+        case (l @ NonRec(_, _),   r @ NonRec(_, _))   => localDiff(l, r).some
+        case (l @ SemiRec(_, _),  r @ SemiRec(_, _))  => localDiff(l, r).some
+        case (l @ MultiRec(_, _), r @ MultiRec(_, _)) => localDiff(l, r).some
+        case (OneList(l),         OneList(r))         =>
+          Similar[T, Example, T[Diff[T, Example, ?]]](OneList[DiffT[T, Example]](diffTraverse(l, r))).embed.some
+        case (TwoLists(l1, l2),   TwoLists(r1, r2))   =>
+          Similar[T, Example, T[Diff[T, Example, ?]]](TwoLists[DiffT[T, Example]](diffTraverse(l1, r1), diffTraverse(l2, r2))).embed.some
+        case (_,                  _)                  => None
+      }
+  }
+
+  implicit val arbitrary: Delay[Arbitrary, Example] =
+    new Delay[Arbitrary, Example] {
+      def apply[α](arb: Arbitrary[α]) =
+        Arbitrary(Gen.sized(size =>
+          Gen.oneOf(
+            Empty[α]().point[Gen],
+            (Arbitrary.arbitrary[String], Arbitrary.arbitrary[Int]).mapN(
+              NonRec[α](_, _)),
+            (Arbitrary.arbitrary[Int], arb.arbitrary).mapN(SemiRec(_, _)),
+            (arb.arbitrary, arb.arbitrary).mapN(MultiRec(_, _)),
+            Gen.listOfN(size, arb.arbitrary).map(OneList(_)),
+            (Gen.listOfN(size / 2, arb.arbitrary), Gen.listOfN(size / 2, arb.arbitrary)).mapN(
+              TwoLists(_, _)))
+        ))
+    }
+
+  implicit def cogen[A: Monoid: Cogen]: Cogen[Example[A]] =
+    Cogen((seed, value: Example[A]) => Cogen[A].perturb(seed, Monoid[A].empty))
+}
+
+class ExampleSpec extends Specification with ScalaCheck with Discipline {
+  "Example" >> {
+    checkAll("Example.EqLaws", EqTests[Example[Int]].eqv)
+    checkAll("Example.TraverseLaws", CompatTraverseTests[Example].traverse[Int, Int, Int, Int, Option, Option])
+  }
 }
