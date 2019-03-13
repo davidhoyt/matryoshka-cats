@@ -25,10 +25,16 @@ trait ApplicativeSyntax {
   import ApplicativeSyntax._
 
   @inline implicit final def toCompatApplicativeIdOps[A](a: A): ApplicativeIdOps[A] = new ApplicativeIdOps[A](a)
+  @inline implicit final def toCompatApplicativeInstanceOps[F[_]](instance: Applicative[F]): ApplicativeInstanceOps[F] = new ApplicativeInstanceOps[F](instance)
 }
 
 object ApplicativeSyntax {
   final class ApplicativeIdOps[A](private val a: A) extends AnyVal {
     def point[F[_]](implicit A: Applicative[F]): F[A] = A.pure(a)
+  }
+
+  final class ApplicativeInstanceOps[F[_]](private val instance: Applicative[F]) extends AnyVal {
+    def apply2[A, B, C](fa: => F[A], fb: => F[B])(f: (A, B) => C): F[C] =
+      instance.map2(fa, fb)(f)
   }
 }

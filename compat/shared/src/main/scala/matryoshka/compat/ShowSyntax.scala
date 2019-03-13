@@ -51,6 +51,7 @@ object ShowSyntax {
 
   final class ShowOps[F](private val self: F) extends AnyVal {
     //def show(implicit F: Show[F]): String = F.show(self)
+    def shows(implicit F: Show[F]): String = F.show(self)
   }
 
   final class ShowInstanceOps[F](private val self: Show[F]) extends AnyVal {

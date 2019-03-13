@@ -15,22 +15,20 @@
  */
 
 package matryoshka
-package compat
 
-import slamdata.Predef._
+import compat._
 
-import cats.data._
-import cats.implicits._
+import cats._
 
-trait NonEmptyListSyntax {
-  import NonEmptyListSyntax._
+import org.scalacheck._
 
-  @inline implicit final def toCompatNonEmptyListObjectOps(given: NonEmptyList.type): NonEmptyListObjectOps.type = NonEmptyListObjectOps
+package object scalacheck extends LowPriorityScalaCheck {
+  @Deviation("Scalaz-ScalaCheck provides this normally.")
+  implicit object arbInstances extends Functor[Arbitrary] {
+    override def map[A, B](fa: Arbitrary[A])(f: A => B): Arbitrary[B] = Arbitrary(fa.arbitrary.map(f))
+  }
 }
 
-object NonEmptyListSyntax {
-  object NonEmptyListObjectOps {
-    @inline def nel[A](h: A, t: List[A]): NonEmptyList[A] = NonEmptyList(h, t)
-    @inline def nonEmptyListEqual[A: Equal]: Equal[NonEmptyList[A]] = Equal.equalBy[NonEmptyList[A], List[A]](_.toList)
-  }
+private[matryoshka] trait LowPriorityScalaCheck {
+  //implicit def arbFunction1[A]: Arbitrary[A => A] = Arbitrary(Gen.const(x => x))
 }

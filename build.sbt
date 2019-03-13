@@ -48,8 +48,8 @@ lazy val root = project.in(file("."))
     releaseCrossBuild := false
   )
   .aggregate(
-    kernelJS, compatJS, coreJS, monocleJS, scalacheckJS,  testsJS,
-    kernelJVM, compatJVM, coreJVM, monocleJVM, scalacheckJVM, testsJVM
+    kernelJS, compatJS, coreJS, scalacheckJS,  testsJS,
+    kernelJVM, compatJVM, coreJVM, scalacheckJVM, testsJVM
     //docs
   )
   .enablePlugins(AutomateHeaderPlugin)
@@ -71,31 +71,26 @@ lazy val core = crossProject(JVMPlatform, JSPlatform).in(file("core"))
   .settings(standardSettings ++ publishSettings: _*)
   .enablePlugins(AutomateHeaderPlugin)
 
-lazy val monocle = crossProject(JVMPlatform, JSPlatform).in(file("monocle"))
-  .dependsOn(core)
-  .settings(name := "matryoshka-monocle")
-  .settings(standardSettings ++ publishSettings: _*)
-  .settings(libraryDependencies ++= Seq(
-    "com.github.julien-truffaut" %%% "monocle-core" % monocleVersion % "compile, test"
-  ))
-  .enablePlugins(AutomateHeaderPlugin)
-
 lazy val scalacheck = crossProject(JVMPlatform, JSPlatform)
-  .dependsOn(core, monocle)
+  .dependsOn(core)
   .settings(name := "matryoshka-scalacheck")
   .settings(standardSettings ++ publishSettings: _*)
   .settings(libraryDependencies ++= Seq(
+    "io.chrisdavenport" %% "cats-scalacheck" % "0.1.0",
     // NB: Needs a version of Scalacheck with rickynils/scalacheck#301.
     "org.scalacheck" %% "scalacheck" % "1.14.0"))
   .enablePlugins(AutomateHeaderPlugin)
 
 lazy val tests = crossProject(JVMPlatform, JSPlatform)
   .settings(name := "matryoshka-tests")
-  .dependsOn(core, monocle, scalacheck)
+  .dependsOn(core, scalacheck)
   .settings(standardSettings ++ noPublishSettings: _*)
   .settings(libraryDependencies ++= Seq(
-    //"com.github.julien-truffaut" %% "monocle-law"   % monocleVersion % Test,
-    "org.specs2"                 %% "specs2-core"   % "4.3.5"        % Test))
+    "com.github.julien-truffaut" %% "monocle-law"       % monocleVersion % Test,
+    "org.typelevel"              %% "cats-laws"         % catsVersion    % Test,
+    "org.specs2"                 %% "specs2-scalacheck" % "4.3.5"        % Test,
+    "org.specs2"                 %% "specs2-cats"       % "4.3.5"        % Test,
+    "org.specs2"                 %% "specs2-core"       % "4.3.5"        % Test))
   .enablePlugins(AutomateHeaderPlugin)
 
 /** A project just for the console.
@@ -126,9 +121,6 @@ lazy val compatJVM = compat.jvm
 
 lazy val coreJS  = core.js
 lazy val coreJVM = core.jvm
-
-lazy val monocleJS = monocle.js
-lazy val monocleJVM = monocle.jvm
 
 lazy val scalacheckJS  = scalacheck.js
 lazy val scalacheckJVM = scalacheck.jvm

@@ -39,6 +39,8 @@ object DisjunctionSyntax {
   type \/[+A, +B] = Either[A, B]
 
   object \/ {
+    /** Construct a left disjunction value. */
+    @inline def left[A, B]: A => A \/ B = -\/(_)
     implicit def DisjunctionInstances1[L]:  Traverse[L \/ ?] with MonadError[L \/ ?, L] = cats.instances.either.catsStdInstancesForEither[L]
   }
 

@@ -83,5 +83,13 @@ object PotentialFailure {
 
   implicit def traverse[T[_[_]], F[_]: Traverse, E]:
       Traverse[PotentialFailure[T, F, E, ?]] =
-    bitraverse[T, F].rightTraverse[E]
+    new TraverseWithFolds[PotentialFailure[T, F, E, ?]] {
+      override def traverse[G[_], A, B](fa: PotentialFailure[T, F, E, A])(f: A => G[B])(implicit G: Applicative[G]): G[PotentialFailure[T, F, E, B]] =
+        fa match {
+          case Success(v)        => G.pure(Success(v))
+          case Failure(e)        => G.pure(Failure(e)) // ∘ (Failure(_))
+          case PartialFailure(v) => v.traverse(f) ∘ (PartialFailure(_))
+        }
+    }
+    //bitraverse[T, F].rightTraverse[E]
 }

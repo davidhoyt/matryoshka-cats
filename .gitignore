@@ -13,5 +13,6 @@ tmp
 .settings
 *.swp
 tags
+repl
 .ensime
 .ensime_cache

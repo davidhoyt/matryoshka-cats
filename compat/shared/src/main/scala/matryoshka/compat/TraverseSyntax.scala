@@ -18,10 +18,10 @@ package matryoshka
 package compat
 
 import slamdata.Predef._
-
 import cats._
 import cats.free._
 import cats.data._
+import cats.kernel.CommutativeMonoid
 
 trait TraverseSyntax {
   import TraverseSyntax._

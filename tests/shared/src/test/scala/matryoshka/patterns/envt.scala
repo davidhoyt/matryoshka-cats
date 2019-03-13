@@ -15,22 +15,29 @@
  */
 
 package matryoshka
-package compat
+package patterns
 
 import slamdata.Predef._
+
+import exp._
+import helpers._
+import data.cofree._
+import scalacheck.cogen._
+import scalacheck.arbitrary._
 
 import cats.data._
 import cats.implicits._
 
-trait NonEmptyListSyntax {
-  import NonEmptyListSyntax._
+import cats.laws.discipline._
+import cats.kernel.laws.discipline._
 
-  @inline implicit final def toCompatNonEmptyListObjectOps(given: NonEmptyList.type): NonEmptyListObjectOps.type = NonEmptyListObjectOps
-}
+import org.specs2.mutable._
 
-object NonEmptyListSyntax {
-  object NonEmptyListObjectOps {
-    @inline def nel[A](h: A, t: List[A]): NonEmptyList[A] = NonEmptyList(h, t)
-    @inline def nonEmptyListEqual[A: Equal]: Equal[NonEmptyList[A]] = Equal.equalBy[NonEmptyList[A], List[A]](_.toList)
+class EnvTSpec extends Specification with AlgebraChecks {
+  "EnvT" >> {
+    checkAll("EnvT.EqLaws", EqTests[EnvT[String, Exp, Int]].eqv)
+    checkAll("EnvT.ComonadLaws", ComonadTests[EnvT[String, NonEmptyList, ?]].comonad[Int, Int, Int])
+
+    checkAlgebraIsoLaws("EnvT ⇔ Cofree", EnvT.cofreeIso[Int, Exp])
   }
 }

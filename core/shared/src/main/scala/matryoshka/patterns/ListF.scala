@@ -82,13 +82,13 @@ object ListF {
     override def bifoldLeft[A, B, C](fab: ListF[A, B], c: C)(f: (C, A) => C, g: (C, B) => C): C =
       fab match {
         case NilF() => c
-        case ConsF(a, _) => f(c, a)
+        case ConsF(a, b) => g(f(c, a), b)
       }
 
     override def bifoldRight[A, B, C](fab: ListF[A, B], c: Eval[C])(f: (A, Eval[C]) => Eval[C], g: (B, Eval[C]) => Eval[C]): Eval[C] =
       fab match {
         case NilF() => c
-        case ConsF(_, b) => g(b, c)
+        case ConsF(a, b) => f(a, g(b, c))
       }
 
     override def bitraverse[G[_], A, B, C, D](

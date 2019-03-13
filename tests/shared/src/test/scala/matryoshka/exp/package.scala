@@ -15,22 +15,15 @@
  */
 
 package matryoshka
-package compat
 
 import slamdata.Predef._
+import matryoshka.data.Fix
 
-import cats.data._
-import cats.implicits._
-
-trait NonEmptyListSyntax {
-  import NonEmptyListSyntax._
-
-  @inline implicit final def toCompatNonEmptyListObjectOps(given: NonEmptyList.type): NonEmptyListObjectOps.type = NonEmptyListObjectOps
-}
-
-object NonEmptyListSyntax {
-  object NonEmptyListObjectOps {
-    @inline def nel[A](h: A, t: List[A]): NonEmptyList[A] = NonEmptyList(h, t)
-    @inline def nonEmptyListEqual[A: Equal]: Equal[NonEmptyList[A]] = Equal.equalBy[NonEmptyList[A], List[A]](_.toList)
-  }
+package object exp {
+  def num(v: Int) = Fix[Exp](Num(v))
+  def mul(left: Fix[Exp], right: Fix[Exp]) = Fix[Exp](Mul(left, right))
+  def vari(v: Symbol) = Fix[Exp](Var(v))
+  def lam(param: Symbol, body: Fix[Exp]) = Fix[Exp](Lambda(param, body))
+  def ap(func: Fix[Exp], arg: Fix[Exp]) = Fix[Exp](Apply(func, arg))
+  def let(name: Symbol, v: Fix[Exp], inBody: Fix[Exp]) = Fix[Exp](Let(name, v, inBody))
 }
