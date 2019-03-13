@@ -34,5 +34,8 @@ object FoldableSyntax {
 
     @inline def toIList(implicit F: Foldable[F]): List[A] =
       F.toList(self)
+
+    @inline def length(implicit F: Foldable[F]): Int =
+      F.foldLeft(self, 0)((b, _) => b + 1)
   }
 }

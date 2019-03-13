@@ -71,6 +71,16 @@ trait CogenInstances extends CogenInstancesʹ {
       case Indeed(a, b) => Cogen.perturbPair(seed, (a, b))
     })
 
+  @Deviation("Required because Cats checks congruence for Eq laws.")
+  implicit def listFCogen[A: Cogen]: Delay[Cogen, ListF[A, ?]] =
+    new Delay[Cogen, ListF[A, ?]] {
+      override def apply[B](fa: Cogen[B]): Cogen[ListF[A, B]] =
+        Cogen((seed, value) => value match {
+          case NilF() => Cogen[Unit].perturb(seed, ())
+          case ConsF(a, _) => Cogen[A].perturb(seed, a)
+        })
+    }
+
   implicit def coEnvCogen[F[_], A: Cogen](implicit F: Delay[Cogen, F]): Delay[Cogen, CoEnv[A, F, ?]] =
     new Delay[Cogen, CoEnv[A, F, ?]] {
       def apply[B](b: Cogen[B]) =
